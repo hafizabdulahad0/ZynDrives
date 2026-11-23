@@ -46,6 +46,31 @@ Official cloud desktop sync applications (such as Google Drive Desktop) force gi
 
 ---
 
+## 📸 Screenshots & Use Cases
+
+### 1. Multi-Cloud SSD Virtual Disk Manager Dashboard
+Real-time tracking of combined cloud capacity, active mounted drives, and per-drive metrics across Google Drive accounts:
+
+<p align="center">
+  <img src="docs/screenshots/zyndrives-dashboard-usecase.png" alt="ZynDrives Multi-Cloud Dashboard" width="900" />
+</p>
+
+### 2. Windows Explorer & AI Coding Agent Integration
+Google Drive remotes mounted as native Windows NVMe drives (`J:`, `K:`, `L:`) accessible seamlessly to File Explorer, Antigravity, Claude Code, Codex, and Cursor:
+
+<p align="center">
+  <img src="docs/screenshots/zyndrives-explorer-usecase.png" alt="ZynDrives Windows Explorer and AI Agent Integration" width="900" />
+</p>
+
+### 3. Native Desktop Application
+Clean dark-mode interface with instant 1-click mounting, automatic startup registration, and system tray minimization:
+
+<p align="center">
+  <img src="docs/screenshots/zyndrives-main.png" alt="ZynDrives Application UI" width="750" />
+</p>
+
+---
+
 ## ✨ Features
 
 - **⚡ 1-Click Instant Mount & Unmount:** Mount all configured cloud drives simultaneously with a single click.
