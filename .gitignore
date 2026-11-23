@@ -1,0 +1,4 @@
+# Windows Build & Binary Ignore
+*.obj
+*.pdb
+*.log

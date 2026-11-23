@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZynDrives - Cloud SSD Virtual Disk Manager for Windows</title>
+  <meta name="description" content="Mount Google Drive and cloud remotes as native Windows NVMe SSD drives (J:, K:, L:) with zero C: drive caching and silent background auto-mounting.">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(22, 31, 48, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --emerald: #34d399;
+      --rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .glow-bg {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(52, 211, 153, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px 0 20px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand img {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+    }
+
+    .brand-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .nav-btn {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--primary) !important;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 8px 18px;
+      border-radius: 8px;
+      transition: all 0.2s !important;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary) !important;
+      color: #000 !important;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 60px 0 40px 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--emerald));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.18rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 36px auto;
+    }
+
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 60px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-main);
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(30, 41, 59, 1);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* App Preview Window */
+    .app-preview-wrap {
+      max-width: 820px;
+      margin: 0 auto 80px auto;
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(56, 189, 248, 0.1);
+      overflow: hidden;
+    }
+
+    .win-header {
+      background: #0f172a;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .win-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .win-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .win-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .win-dot.r { background: #ef4444; }
+    .win-dot.y { background: #f59e0b; }
+    .win-dot.g { background: #10b981; }
+
+    .win-body {
+      padding: 24px;
+      background: #0b0f19;
+    }
+
+    .hud-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .metric-box {
+      background: #161f30;
+      border: 1px solid rgba(45, 59, 85, 0.6);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .drive-row {
+      background: #161f30;
+      border: 1px solid rgba(45, 59, 85, 0.6);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .drive-id {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .drive-badge {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--emerald);
+      width: 36px;
+      text-align: center;
+    }
+
+    .drive-meta h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .drive-meta p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .drive-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pill-online {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--emerald);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .btn-sm {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Comparison Section */
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .section-title h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+
+    .comp-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 32px;
+      backdrop-filter: blur(12px);
+    }
+
+    .comp-card.bad { border-color: rgba(239, 68, 68, 0.2); }
+    .comp-card.good {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.08);
+    }
+
+    .comp-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .comp-badge.bad { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .comp-badge.good { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .comp-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 100px;
+    }
+
+    .feat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: all 0.2s;
+    }
+
+    .feat-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .feat-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+      color: var(--primary);
+    }
+
+    .feat-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feat-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 40px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-main);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+      .comparison-grid, .features-grid, .hud-metrics {
+        grid-template-columns: 1fr;
+      }
+      h1 { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"></div>
+
+  <div class="container">
+    <header>
+      <a href="#" class="brand">
+        <img src="logo.png" alt="ZynDrives Logo">
+        <span class="brand-name">ZynDrives</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#comparison">Why ZynDrives</a>
+        <a href="https://github.com/hafizabdulahad0/ZynDrives" target="_blank">GitHub</a>
+        <a href="https://github.com/hafizabdulahad0/ZynDrives/releases" class="nav-btn">Download v1.0</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="badge">
+        <span>⚡</span> ZynOps Solutions • Windows 10 & 11 • Open Source (MIT)
+      </div>
+      <h1>Mount Google Drive as<br><span>Native High-Speed NVMe SSDs</span></h1>
+      <p>
+        Zero C: drive caching. Zero messy command prompts. Mount multiple cloud accounts as native Windows drive letters (J:, K:, L:) recognized by AI coding agents, IDEs, and Windows Explorer.
+      </p>
+
+      <div class="cta-group">
+        <a href="https://github.com/hafizabdulahad0/ZynDrives/raw/main/bin/ZynDrives-Setup.exe" class="btn-primary">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download Installer (.exe)
+        </a>
+        <a href="https://github.com/hafizabdulahad0/ZynDrives/raw/main/bin/ZynDrives.exe" class="btn-secondary">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Portable (.exe, 28 KB)
+        </a>
+        <a href="https://github.com/hafizabdulahad0/ZynDrives" target="_blank" class="btn-secondary">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Star on GitHub
+        </a>
+      </div>
+
+      <!-- Live UI Dashboard Mockup -->
+      <div class="app-preview-wrap">
+        <div class="win-header">
+          <div class="win-title">
+            <span>⚡</span> ZynDrives - Cloud SSD Virtual Disk Manager
+          </div>
+          <div class="win-dots">
+            <span class="win-dot r"></span>
+            <span class="win-dot y"></span>
+            <span class="win-dot g"></span>
+          </div>
+        </div>
+        <div class="win-body">
+          <div class="hud-metrics">
+            <div class="metric-box">
+              <div class="metric-label">☁️ TOTAL CLOUD CAPACITY</div>
+              <div class="metric-val" style="color:#38bdf8;">45.0 GB</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">🟢 ACTIVE MOUNTED DRIVES</div>
+              <div class="metric-val" style="color:#34d399;">3 / 3 Mounted</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">💾 FREE STORAGE AVAILABLE</div>
+              <div class="metric-val" style="color:#f8fafc;">38.4 GB</div>
+            </div>
+          </div>
+
+          <!-- Drive 1 -->
+          <div class="drive-row">
+            <div class="drive-id">
+              <div class="drive-badge">J:</div>
+              <div class="drive-meta">
+                <h4>ahad_dev: ➔ ahad.dev</h4>
+                <p>3.2 GB used of 15.0 GB (21% full) • VFS: writes • Chunk: 128M</p>
+              </div>
+            </div>
+            <div class="drive-actions">
+              <span class="pill-online">🟢 MOUNTED</span>
+              <button class="btn-sm">Unmount</button>
+              <button class="btn-sm">📂 Open</button>
+            </div>
+          </div>
+
+          <!-- Drive 2 -->
+          <div class="drive-row">
+            <div class="drive-id">
+              <div class="drive-badge">K:</div>
+              <div class="drive-meta">
+                <h4>hafizahad: ➔ hafizahad</h4>
+                <p>1.8 GB used of 15.0 GB (12% full) • VFS: writes • Chunk: 128M</p>
+              </div>
+            </div>
+            <div class="drive-actions">
+              <span class="pill-online">🟢 MOUNTED</span>
+              <button class="btn-sm">Unmount</button>
+              <button class="btn-sm">📂 Open</button>
+            </div>
+          </div>
+
+          <!-- Drive 3 -->
+          <div class="drive-row">
+            <div class="drive-id">
+              <div class="drive-badge">L:</div>
+              <div class="drive-meta">
+                <h4>ahadawan: ➔ ahadawan</h4>
+                <p>1.6 GB used of 15.0 GB (10% full) • VFS: writes • Chunk: 128M</p>
+              </div>
+            </div>
+            <div class="drive-actions">
+              <span class="pill-online">🟢 MOUNTED</span>
+              <button class="btn-sm">Unmount</button>
+              <button class="btn-sm">📂 Open</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison -->
+    <section id="comparison" class="section-title">
+      <h2>Native SSD Virtualization vs. Traditional Sync</h2>
+      <p>Why downloading entire cloud folders or opening command consoles wastes hours.</p>
+    </section>
+
+    <div class="comparison-grid">
+      <div class="comp-card bad">
+        <span class="comp-badge bad">Google Drive Desktop / Manual CLI</span>
+        <ul class="comp-list">
+          <li><span class="icon">❌</span> <strong>C: Drive Pollution:</strong> Forces dozens of gigabytes into %LOCALAPPDATA% on your system disk.</li>
+          <li><span class="icon">❌</span> <strong>Command Prompt Clutter:</strong> Running batch files leaves 3 to 5 ugly command windows open on your desktop.</li>
+          <li><span class="icon">❌</span> <strong>Crashes on Startup:</strong> Environment PATH changes break scripts silently after reboots.</li>
+          <li><span class="icon">❌</span> <strong>Agent Incompatible:</strong> AI coding agents and CLI compilers freeze waiting on virtual filesystem sync locks.</li>
+        </ul>
+      </div>
+
+      <div class="comp-card good">
+        <span class="comp-badge good">ZynDrives Engine</span>
+        <ul class="comp-list">
+          <li><span class="icon">✅</span> <strong>0 Bytes System C: Drive Cache:</strong> Pure transient memory buffers and atomic VFS write support.</li>
+          <li><span class="icon">✅</span> <strong>100% Completely Silent:</strong> Zero terminal windows. Runs in background with mini system tray controller.</li>
+          <li><span class="icon">✅</span> <strong>1-Click Startup Auto-Mount:</strong> Drives are ready the instant you log in to Windows.</li>
+          <li><span class="icon">✅</span> <strong>Native NVMe Emulation:</strong> Antigravity, Claude Code, Cursor, and VS Code read and write directly to J:, K:, L:.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <section id="features" class="section-title">
+      <h2>Engineered for High-Performance Workspaces</h2>
+      <p>Everything you need to turn cloud storage into instant local drives.</p>
+    </section>
+
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>One-Click Mount & Unmount</h3>
+        <p>Mount or unmount all your cloud remotes instantly with a single click, or individual drives as needed.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🚀</div>
+        <h3>Windows Startup Auto-Mount</h3>
+        <p>Configures a zero-overhead Windows registry startup handler so all drives are automatically mounted upon logon.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🤖</div>
+        <h3>AI Agent & IDE Ready</h3>
+        <p>Optimized with <code>--links</code> and atomic writes so Antigravity, Codex, Cursor, and git work seamlessly on virtual mounts.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🛡️</div>
+        <h3>0% C: Drive Cache Safe</h3>
+        <p>Uses intelligent transient memory buffers and customizable chunk sizes, keeping your primary SSD clean.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Real-Time Storage HUD</h3>
+        <p>Live metrics showing total combined cloud space, percent used, free capacity, and live connection health.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon">🪶</div>
+        <h3>Ultra-Lightweight (28 KB)</h3>
+        <p>Pure native C# WinForms running directly on Windows .NET Framework. Starts in under 20ms with 0% GPU usage.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        <strong>ZynDrives</strong> by <a href="https://github.com/hafizabdulahad0" target="_blank">ZynOps Solutions</a>.
+        Released under the open-source MIT License.
+      </div>
+      <div>
+        <a href="https://github.com/hafizabdulahad0/ZynDrives" target="_blank">Source Code</a> •
+        <a href="https://github.com/hafizabdulahad0/ZynDrives/issues" target="_blank">Issues & Feedback</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
