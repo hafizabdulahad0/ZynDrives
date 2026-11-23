@@ -158,8 +158,8 @@ namespace ZynDrives
             string letter = mapping.DriveLetter.TrimEnd('\\');
             if (!letter.EndsWith(":")) letter += ":";
 
-            string args = string.Format("mount {0} {1} --vfs-cache-mode {2} --drive-chunk-size {3} --links --volname \"{4}\"",
-                mapping.RemoteName, letter, mapping.CacheMode, mapping.ChunkSize, mapping.VolumeName);
+            string args = string.Format("mount {0} {1} --vfs-cache-mode full --cache-dir \"F:\\.rclone_cache\" --file-perms 0777 --dir-perms 0777 --vfs-cache-max-size 50G --vfs-cache-max-age 24h --vfs-read-ahead 128M --buffer-size 64M --drive-chunk-size {2} --links --volname \"{3}\"",
+                mapping.RemoteName, letter, mapping.ChunkSize, mapping.VolumeName);
 
             try
             {
