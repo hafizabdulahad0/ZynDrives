@@ -16,7 +16,7 @@ namespace ZynDrives
 
         public DriveMapping()
         {
-            CacheMode = "writes";
+            CacheMode = "full";
             ChunkSize = "128M";
             AutoMount = true;
         }
@@ -56,7 +56,7 @@ namespace ZynDrives
                                 RemoteName = parts[0].Trim(),
                                 DriveLetter = parts[1].Trim().ToUpper(),
                                 VolumeName = parts[2].Trim(),
-                                CacheMode = parts.Length > 3 ? parts[3].Trim() : "writes",
+                                CacheMode = parts.Length > 3 ? parts[3].Trim() : "full",
                                 ChunkSize = parts.Length > 4 ? parts[4].Trim() : "128M",
                                 AutoMount = parts.Length > 5 ? parts[5].Trim() != "0" : true
                             };

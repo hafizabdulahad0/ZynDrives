@@ -104,6 +104,44 @@ namespace ZynDrives
             return "rclone.exe";
         }
 
+        /// <summary>
+        /// Selects a cache directory on the non-C fixed drive with the most free space
+        /// to keep the OS drive untouched, falling back to LocalAppData on single-drive systems.
+        /// </summary>
+        public static string ResolveCacheDir()
+        {
+            string bestRoot = null;
+            long maxFree = -1;
+
+            try
+            {
+                foreach (var d in DriveInfo.GetDrives())
+                {
+                    if (!d.IsReady || d.DriveType != DriveType.Fixed) continue;
+                    if (d.Name.StartsWith("C:", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (d.AvailableFreeSpace > maxFree)
+                    {
+                        maxFree = d.AvailableFreeSpace;
+                        bestRoot = d.Name;
+                    }
+                }
+            }
+            catch { }
+
+            string cacheDir = !string.IsNullOrEmpty(bestRoot)
+                ? Path.Combine(bestRoot, ".rclone_cache")
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZynOps", "ZynDrives", "cache");
+
+            try
+            {
+                if (!Directory.Exists(cacheDir))
+                    Directory.CreateDirectory(cacheDir);
+            }
+            catch { }
+
+            return cacheDir;
+        }
+
         public bool IsDriveMounted(string driveLetter)
         {
             string root = driveLetter.TrimEnd('\\');
@@ -158,8 +196,10 @@ namespace ZynDrives
             string letter = mapping.DriveLetter.TrimEnd('\\');
             if (!letter.EndsWith(":")) letter += ":";
 
-            string args = string.Format("mount {0} {1} --vfs-cache-mode full --cache-dir \"F:\\.rclone_cache\" --dir-cache-time 72h --drive-pacer-min-sleep 10ms --drive-pacer-burst 100 --vfs-read-ahead 64M --buffer-size 64M --file-perms 0777 --dir-perms 0777 --vfs-cache-max-size 50G --vfs-cache-max-age 24h --drive-chunk-size {2} --links --vfs-fast-fingerprint --volname \"{3}\"",
-                mapping.RemoteName, letter, mapping.ChunkSize, mapping.VolumeName);
+            string cacheMode = string.IsNullOrWhiteSpace(mapping.CacheMode) ? "full" : mapping.CacheMode;
+            string cacheDir = ResolveCacheDir();
+            string args = string.Format("mount {0} {1} --vfs-cache-mode {2} --cache-dir \"{3}\" --dir-cache-time 72h --drive-pacer-min-sleep 10ms --drive-pacer-burst 100 --vfs-read-ahead 64M --buffer-size 64M --file-perms 0777 --dir-perms 0777 --vfs-cache-max-size 50G --vfs-cache-max-age 24h --drive-chunk-size {4} --links --vfs-fast-fingerprint --volname \"{5}\"",
+                mapping.RemoteName, letter, cacheMode, cacheDir, mapping.ChunkSize, mapping.VolumeName);
 
             try
             {
